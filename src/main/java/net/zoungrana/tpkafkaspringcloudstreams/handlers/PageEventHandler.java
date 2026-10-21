@@ -42,7 +42,6 @@ public class PageEventHandler {
     @Bean
     public Function<KStream<String, PageEvent>,KStream<String,Long>> kStreamFunction(){
         return (input)->input
-                .filter((key,value)->value.duration()>100)
                 .map((key,value)->new KeyValue<>(value.name(),value.duration()))
                 .groupByKey(Grouped.with(Serdes.String(),Serdes.Long()))
                 .windowedBy(TimeWindows.ofSizeWithNoGrace(Duration.ofSeconds(5)))
