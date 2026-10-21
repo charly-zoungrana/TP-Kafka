@@ -46,41 +46,41 @@ Le système s'articule autour de trois canaux de traitement :
 
 ```mermaid
 flowchart LR
-    subgraph Clients["Clients & UI"]
-        Browser["Navigateur / API"]
-        Dashboard["Dashboard Smoothie Charts (index.html)"]
+    subgraph Clients["Clients et Dashboard"]
+        Browser["Client HTTP / Navigateur"]
+        Dashboard["Dashboard Temps Reel (Smoothie Charts)"]
     end
 
     subgraph SpringApp["Application Spring Boot"]
         direction TB
-        RestController["PageEventController<br/>(StreamBridge)"]
-        ConsumerService["pageEventConsumer<br/>(Consumer&lt;PageEvent&gt;)"]
-        SupplierService["pageEventSupplier<br/>(Supplier&lt;PageEvent&gt;)"]
-        KStreams["kStreamFunction<br/>(Kafka Streams Windowed Count)"]
-        StateStore[("State Store Local<br/>count-store")]
-        SSE["Endpoint SSE /analytics<br/>(InteractiveQueryService)"]
+        RestController["PageEventController (StreamBridge)"]
+        ConsumerService["pageEventConsumer (Consumer)"]
+        SupplierService["pageEventSupplier (Supplier)"]
+        KStreams["kStreamFunction (Kafka Streams)"]
+        StateStore[("count-store (Window Store)")]
+        SSE["Endpoint SSE /analytics"]
     end
 
-    subgraph KafkaCluster["Cluster Apache Kafka (Docker)"]
+    subgraph KafkaCluster["Cluster Apache Kafka"]
         T1[("Topic T1")]
         T2[("Topic T2")]
         T3[("Topic T3")]
     end
 
     %% Flux 1 : REST vers T1 vers Consumer
-    Browser -->|GET /publish?name=...&topic=T1| RestController
-    RestController -->|StreamBridge.send| T1
-    T1 -->|pageEventConsumer-in-0| ConsumerService
+    Browser -->|"GET /publish"| RestController
+    RestController -->|"StreamBridge.send"| T1
+    T1 -->|"pageEventConsumer-in-0"| ConsumerService
 
     %% Flux 2 : Supplier vers T2 vers Kafka Streams vers T3
-    SupplierService -->|pageEventSupplier-out-0 (1s)| T2
-    T2 -->|kStreamFunction-in-0| KStreams
-    KStreams -->|State update| StateStore
-    KStreams -->|kStreamFunction-out-0| T3
+    SupplierService -->|"pageEventSupplier-out-0 [1s]"| T2
+    T2 -->|"kStreamFunction-in-0"| KStreams
+    KStreams -->|"Mise a jour etat"| StateStore
+    KStreams -->|"kStreamFunction-out-0"| T3
 
     %% Flux 3 : SSE Dashboard
-    StateStore -->|Interactive Queries| SSE
-    SSE -->|text/event-stream| Dashboard
+    StateStore -->|"InteractiveQueryService"| SSE
+    SSE -->|"text/event-stream"| Dashboard
 ```
 
 ---
